@@ -21,8 +21,6 @@ cruded tx crude create <name> <value> --from <account> --chain-id crude
 
 All parameters are mandatory, i.e. using `""` for `name` or `value` will update that property to become the empty string.
 
-Resources can only be updated by their creator.
-
 ```
 cruded tx crude update <name> <value> <id> --from <account> --chain-id crude
 ```
@@ -30,8 +28,6 @@ cruded tx crude update <name> <value> <id> --from <account> --chain-id crude
 
 
 **Delete Resource**
-
-Resources can only be deleted by their creator.
 
 ```
 cruded tx crude delete <id> --from <account> --chain-id crude
@@ -58,3 +54,15 @@ The next page key is returned if there are more resources.
 ```
 cruded q crude list <name_filter> <value_filter> --page-limit=<limit> [--page-offset=<offset>] [--page-key=<page_key>]
 ```
+
+
+
+## Consensus Breaking Change
+
+A change breaks consensus if nodes on the old version cannot agree with nodes on the new version on the validity of transactions.
+This is significant because nodes on different versions cannot agree on the state of the ledger and hence a fork is created in the blockchain.
+
+In the `consensus-breaking-change` branch, the validation rules of the update and delete transactions are changed 
+so that any account can update or delete a resource, not just the creator. 
+This breaks consensus because for an update transaction by an account that is not the resource creator, 
+nodes on the old version would invalidate the transaction while nodes on the new version would validate the transaction.
