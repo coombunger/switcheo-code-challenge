@@ -1,11 +1,11 @@
 package keeper
 
 import (
-	"encoding/binary"
-
 	"cosmossdk.io/store/prefix"
+	"encoding/binary"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"crude/x/crude/types"
 )
@@ -69,4 +69,53 @@ func (k Keeper) DeleteResource(ctx sdk.Context, id uint64) {
 	storeAdapter := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	store := prefix.NewStore(storeAdapter, types.KeyPrefix(types.ResourceKey))
 	store.Delete(GetResourceIDBytes(id))
+}
+
+func (k Keeper) ListResources(ctx sdk.Context, pageReq *query.PageRequest, nameFilter string, valueFilter string) ([]types.Resource, *query.PageResponse, error) {
+	storeAdapter := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	store := prefix.NewStore(storeAdapter, types.KeyPrefix(types.ResourceKey))
+
+	iterator := store.Iterator(pageReq.Key, nil)
+	defer iterator.Close()
+
+	offset := pageReq.Offset
+	filteredCount := uint64(0)
+	totalCount := uint64(0)
+	if pageReq.Key != nil {
+		offset = 0
+		totalCount = binary.BigEndian.Uint64(pageReq.Key)
+	}
+
+	var resources []types.Resource
+	for ; iterator.Valid(); iterator.Next() {
+		var resource types.Resource
+
+		err := k.cdc.Unmarshal(iterator.Value(), &resource)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if (nameFilter == "" || resource.Name == nameFilter) &&
+			(valueFilter == "" || resource.Value == valueFilter) {
+			if filteredCount >= offset+pageReq.Limit {
+				break
+			}
+
+			if filteredCount >= offset {
+				resources = append(resources, resource)
+			}
+			filteredCount++
+		}
+		totalCount += 1
+	}
+
+	pageRes := &query.PageResponse{NextKey: nil}
+
+	if filteredCount >= offset+pageReq.Limit {
+		bz := make([]byte, 8)
+		binary.BigEndian.PutUint64(bz, totalCount)
+		pageRes.NextKey = bz
+	}
+
+	return resources, pageRes, nil
 }
