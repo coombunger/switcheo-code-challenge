@@ -64,3 +64,9 @@ func (k Keeper) SetResource(ctx sdk.Context, resource types.Resource) {
 	b := k.cdc.MustMarshal(&resource)
 	store.Set(GetResourceIDBytes(resource.Id), b)
 }
+
+func (k Keeper) DeleteResource(ctx sdk.Context, id uint64) {
+	storeAdapter := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	store := prefix.NewStore(storeAdapter, types.KeyPrefix(types.ResourceKey))
+	store.Delete(GetResourceIDBytes(id))
+}
