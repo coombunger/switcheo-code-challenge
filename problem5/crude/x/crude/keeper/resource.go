@@ -13,22 +13,27 @@ import (
 func (k Keeper) AppendResource(ctx sdk.Context, resource types.Resource) uint64 {
 	count := k.GetResourceCount(ctx)
 	resource.Id = count
+
 	storeAdapter := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	store := prefix.NewStore(storeAdapter, types.KeyPrefix(types.ResourceKey))
+
 	appendedValue := k.cdc.MustMarshal(&resource)
 	store.Set(GetResourceIDBytes(resource.Id), appendedValue)
 	k.SetResourceCount(ctx, count+1)
+
 	return count
 }
 
 func (k Keeper) GetResourceCount(ctx sdk.Context) uint64 {
 	storeAdapter := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	store := prefix.NewStore(storeAdapter, []byte{})
+
 	byteKey := types.KeyPrefix(types.ResourceCountKey)
 	bz := store.Get(byteKey)
 	if bz == nil {
 		return 0
 	}
+
 	return binary.BigEndian.Uint64(bz)
 }
 
@@ -41,34 +46,52 @@ func GetResourceIDBytes(id uint64) []byte {
 func (k Keeper) SetResourceCount(ctx sdk.Context, count uint64) {
 	storeAdapter := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	store := prefix.NewStore(storeAdapter, []byte{})
+
 	byteKey := types.KeyPrefix(types.ResourceCountKey)
 	bz := make([]byte, 8)
 	binary.BigEndian.PutUint64(bz, count)
+
 	store.Set(byteKey, bz)
 }
 
-func (k Keeper) GetResource(ctx sdk.Context, id uint64) (val types.Resource, found bool) {
+func (k Keeper) GetResource(ctx sdk.Context, id uint64) (val types.Resource, found bool, err error) {
 	storeAdapter := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	store := prefix.NewStore(storeAdapter, types.KeyPrefix(types.ResourceKey))
+
 	b := store.Get(GetResourceIDBytes(id))
 	if b == nil {
-		return val, false
+		return val, false, nil
 	}
-	k.cdc.MustUnmarshal(b, &val)
-	return val, true
+
+	err = k.cdc.Unmarshal(b, &val)
+	if err != nil {
+		return val, false, err
+	}
+
+	return val, true, nil
 }
 
-func (k Keeper) SetResource(ctx sdk.Context, resource types.Resource) {
+func (k Keeper) SetResource(ctx sdk.Context, resource types.Resource) error {
 	storeAdapter := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	store := prefix.NewStore(storeAdapter, types.KeyPrefix(types.ResourceKey))
-	b := k.cdc.MustMarshal(&resource)
+
+	b, err := k.cdc.Marshal(&resource)
+	if err != nil {
+		return err
+	}
+
 	store.Set(GetResourceIDBytes(resource.Id), b)
+
+	return nil
 }
 
-func (k Keeper) DeleteResource(ctx sdk.Context, id uint64) {
+func (k Keeper) DeleteResource(ctx sdk.Context, id uint64) error {
 	storeAdapter := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	store := prefix.NewStore(storeAdapter, types.KeyPrefix(types.ResourceKey))
+
 	store.Delete(GetResourceIDBytes(id))
+
+	return nil
 }
 
 func (k Keeper) ListResources(ctx sdk.Context, pageReq *query.PageRequest, nameFilter string, valueFilter string) ([]types.Resource, *query.PageResponse, error) {

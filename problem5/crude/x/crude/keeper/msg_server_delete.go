@@ -14,13 +14,22 @@ import (
 
 func (k msgServer) Delete(goCtx context.Context, msg *types.MsgDelete) (*types.MsgDeleteResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	val, found := k.GetResource(ctx, msg.Id)
+
+	val, found, err := k.GetResource(ctx, msg.Id)
+	if err != nil {
+		return nil, errorsmod.Wrap(err, "can't delete resource")
+	}
 	if !found {
 		return nil, errorsmod.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("key %d doesn't exist", msg.Id))
 	}
 	if val.Creator != msg.Creator {
 		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
 	}
-	k.DeleteResource(ctx, msg.Id)
+
+	err = k.DeleteResource(ctx, msg.Id)
+	if err != nil {
+		return nil, errorsmod.Wrap(err, "can't delete resource")
+	}
+
 	return &types.MsgDeleteResponse{}, nil
 }

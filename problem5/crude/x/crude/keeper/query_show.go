@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"context"
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
+
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"crude/x/crude/types"
@@ -20,7 +21,10 @@ func (k Keeper) Show(goCtx context.Context, req *types.QueryShowRequest) (*types
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	val, found := k.GetResource(ctx, req.Id)
+	val, found, err := k.GetResource(ctx, req.Id)
+	if err != nil {
+		return nil, errorsmod.Wrap(err, "can't get resource")
+	}
 	if !found {
 		return nil, errorsmod.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("key %d doesn't exist", req.Id))
 	}
