@@ -13,6 +13,10 @@ const (
 
 var (
 	ParamsKey = []byte("p_crude")
+
+	ResourceKey = "Resource/value"
+
+	ResourceCountKey = "Resource/count"
 )
 
 func KeyPrefix(p string) []byte {
