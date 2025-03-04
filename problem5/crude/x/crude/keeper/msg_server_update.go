@@ -21,15 +21,12 @@ func (k msgServer) Update(goCtx context.Context, msg *types.MsgUpdate) (*types.M
 		Value:   msg.Value,
 	}
 
-	val, found, err := k.GetResource(ctx, msg.Id)
+	_, found, err := k.GetResource(ctx, msg.Id)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "can't set resource")
 	}
 	if !found {
 		return nil, errorsmod.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("key %d doesn't exist", msg.Id))
-	}
-	if msg.Creator != val.Creator {
-		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
 	}
 
 	err = k.SetResource(ctx, resource)
