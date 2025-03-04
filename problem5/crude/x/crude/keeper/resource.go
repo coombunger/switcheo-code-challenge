@@ -57,3 +57,10 @@ func (k Keeper) GetResource(ctx sdk.Context, id uint64) (val types.Resource, fou
 	k.cdc.MustUnmarshal(b, &val)
 	return val, true
 }
+
+func (k Keeper) SetResource(ctx sdk.Context, resource types.Resource) {
+	storeAdapter := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	store := prefix.NewStore(storeAdapter, types.KeyPrefix(types.ResourceKey))
+	b := k.cdc.MustMarshal(&resource)
+	store.Set(GetResourceIDBytes(resource.Id), b)
+}

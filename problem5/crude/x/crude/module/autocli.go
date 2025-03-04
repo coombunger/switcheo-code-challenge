@@ -34,6 +34,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Send a create tx",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "name"}, {ProtoField: "value"}},
 				},
+				{
+					RpcMethod:      "Update",
+					Use:            "update [name] [value] [id]",
+					Short:          "Send a update tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "name"}, {ProtoField: "value"}, {ProtoField: "id"}},
+				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},
 		},
