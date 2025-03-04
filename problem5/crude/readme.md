@@ -1,51 +1,60 @@
 # crude
-**crude** is a blockchain built using Cosmos SDK and Tendermint and created with [Ignite CLI](https://ignite.com/cli).
 
-## Get started
+Use `ignite chain serve` to start the blockchain.
 
-```
-ignite chain serve
-```
+### CRUD Interface
 
-`serve` command installs dependencies, builds, initializes, and starts your blockchain in development.
+Users can interact with the blockchain using the cli with any `account`, such as the generated `alice` and `bob` accounts.
 
-### Configure
+Users can create, update, delete, show, and list resources.
+Each resource has an id, name, value, and creator.
 
-Your blockchain in development can be configured with `config.yml`. To learn more, see the [Ignite CLI docs](https://docs.ignite.com).
-
-### Web Frontend
-
-Additionally, Ignite CLI offers both Vue and React options for frontend scaffolding:
-
-For a Vue frontend, use: `ignite scaffold vue`
-For a React frontend, use: `ignite scaffold react`
-These commands can be run within your scaffolded blockchain project. 
-
-
-For more information see the [monorepo for Ignite front-end development](https://github.com/ignite/web).
-
-## Release
-To release a new version of your blockchain, create and push a new tag with `v` prefix. A new draft release with the configured targets will be created.
+**Create Resource** 
 
 ```
-git tag v0.1
-git push origin v0.1
+cruded tx crude create <name> <value> --from <account> --chain-id crude
 ```
 
-After a draft release is created, make your final changes from the release page and publish it.
 
-### Install
-To install the latest version of your blockchain node's binary, execute the following command on your machine:
+
+**Update Resource**
+
+All parameters are mandatory, i.e. using `""` for `name` or `value` will update that property to become the empty string.
+
+Resources can only be updated by their creator.
 
 ```
-curl https://get.ignite.com/username/crude@latest! | sudo bash
+cruded tx crude update <name> <value> <id> --from <account> --chain-id crude
 ```
-`username/crude` should match the `username` and `repo_name` of the Github repository to which the source code was pushed. Learn more about [the install process](https://github.com/allinbits/starport-installer).
 
-## Learn more
 
-- [Ignite CLI](https://ignite.com/cli)
-- [Tutorials](https://docs.ignite.com/guide)
-- [Ignite CLI docs](https://docs.ignite.com)
-- [Cosmos SDK docs](https://docs.cosmos.network)
-- [Developer Chat](https://discord.gg/ignite)
+
+**Delete Resource**
+
+Resources can only be deleted by their creator.
+
+```
+cruded tx crude delete <id> --from <account> --chain-id crude
+```
+
+
+
+**Show Resource**
+
+```
+cruded q crude show <id>
+```
+
+
+
+**List Resources**
+
+Returns all resources with name equal to `name_filter` and value equal to `value_filter`.
+Use `""` for either filter to not filter on that property.
+
+Results are paginated by `limit`, and `offset` or `page_key`. 
+The next page key is returned if there are more resources.
+
+```
+cruded q crude list <name_filter> <value_filter> --page-limit=<limit> [--page-offset=<offset>] [--page-key=<page_key>]
+```
